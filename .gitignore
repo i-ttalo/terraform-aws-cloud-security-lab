@@ -1,0 +1,10 @@
+.terraform/
+*.tfstate
+*.tfstate.*
+*.tfvars
+*.pem
+.env
+
+*.deb
+ssm-debug.txt
+test.txt

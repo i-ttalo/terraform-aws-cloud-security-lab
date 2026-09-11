@@ -15,8 +15,3 @@ variable "private_subnet_cidr" {
   type        = string
   default     = "10.0.1.0/24"
 }
-
-variable "admin_cidr" {
-  description = "CIDR allowed to access the EC2 via SSH"
-  type        = string
-}

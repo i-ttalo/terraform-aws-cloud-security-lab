@@ -36,7 +36,7 @@ resource "aws_kms_key" "cloudtrail" {
         Effect = "Allow"
 
         Principal = {
-          AWS = "arn:aws:iam::216103143470:root"
+          AWS = "arn:aws:iam::${data.aws_caller_identity.current.account_id}:root"
         }
 
         Action   = "kms:*"
@@ -55,7 +55,7 @@ resource "aws_kms_key" "cloudtrail" {
 
         Condition = {
           StringLike = {
-            "kms:EncryptionContext:aws:cloudtrail:arn" = "arn:aws:cloudtrail:*:216103143470:trail/*"
+            "kms:EncryptionContext:aws:cloudtrail:arn" = "arn:aws:cloudtrail:*:${data.aws_caller_identity.current.account_id}:trail/*"
           }
         }
       }
@@ -105,7 +105,7 @@ resource "aws_s3_bucket_policy" "cloudtrail_logs" {
         }
 
         Action   = "s3:PutObject"
-        Resource = "${aws_s3_bucket.cloudtrail_logs.arn}/AWSLogs/216103143470/*"
+        Resource = "${aws_s3_bucket.cloudtrail_logs.arn}/AWSLogs/${data.aws_caller_identity.current.account_id}/*"
       }
     ]
   })

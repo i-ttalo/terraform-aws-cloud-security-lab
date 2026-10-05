@@ -28,9 +28,24 @@ resource "aws_instance" "web" {
 
   user_data = <<-EOF
     #!/bin/bash
-    dnf install -y nginx
-    systemctl enable nginx
-    systemctl start nginx
+    set -e
+
+    dnf install -y nginx awscli amazon-cloudwatch-agent
+
+    systemctl enable --now nginx
+
+    aws ssm get-parameter \
+      --name "${aws_ssm_parameter.cloudwatch_agent_config.name}" \
+      --query "Parameter.Value" \
+      --output text \
+      --region "${var.aws_region}" \
+      > /opt/aws/amazon-cloudwatch-agent/etc/amazon-cloudwatch-agent.json
+
+    /opt/aws/amazon-cloudwatch-agent/bin/amazon-cloudwatch-agent-ctl \
+      -a fetch-config \
+      -m ec2 \
+      -s \
+      -c file:/opt/aws/amazon-cloudwatch-agent/etc/amazon-cloudwatch-agent.json
   EOF
 
   lifecycle {

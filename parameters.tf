@@ -9,21 +9,23 @@ resource "aws_ssm_parameter" "environment" {
   }
 }
 
-resource "aws_iam_role_policy" "ec2_parameter_read" {
-  name = "terraform-ec2-parameter-read"
-  role = aws_iam_role.ec2_s3_role.id
+resource "aws_ssm_parameter" "cloudwatch_agent_config" {
+  name = "/cloud-security-lab/cloudwatch-agent-config"
+  type = "String"
 
-  policy = jsonencode({
-    Version = "2012-10-17"
-
-    Statement = [
-      {
-        Effect = "Allow"
-        Action = [
-          "ssm:GetParameter"
-        ]
-        Resource = aws_ssm_parameter.environment.arn
+  value = jsonencode({
+    logs = {
+      logs_collected = {
+        files = {
+          collect_list = [
+            {
+              file_path       = "/var/log/nginx/error.log"
+              log_group_name  = aws_cloudwatch_log_group.ec2.name
+              log_stream_name = "{instance_id}/nginx-error"
+            }
+          ]
+        }
       }
-    ]
+    }
   })
 }

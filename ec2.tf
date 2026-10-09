@@ -25,6 +25,10 @@ resource "aws_instance" "web" {
   vpc_security_group_ids      = [aws_security_group.web.id]
   iam_instance_profile        = aws_iam_instance_profile.ec2_profile.name
   user_data_replace_on_change = true
+  metadata_options {
+    http_endpoint = "enabled"
+    http_tokens   = "required"
+  }
 
   user_data = <<-EOF
     #!/bin/bash

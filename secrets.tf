@@ -1,6 +1,7 @@
 resource "aws_kms_key" "secrets" {
   description             = "KMS key for Cloud Security Lab secrets"
   deletion_window_in_days = 7
+  enable_key_rotation     = true
 
   tags = {
     Name = "cloud-security-lab-secrets-key"

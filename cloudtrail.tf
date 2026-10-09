@@ -26,6 +26,7 @@ resource "aws_s3_bucket_versioning" "cloudtrail_logs" {
 resource "aws_kms_key" "cloudtrail" {
   description             = "KMS key for CloudTrail audit logs encryption"
   deletion_window_in_days = 7
+  enable_key_rotation     = true
 
   policy = jsonencode({
     Version = "2012-10-17"

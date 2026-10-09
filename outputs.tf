@@ -8,6 +8,4 @@ output "private_subnet_id" {
   value       = aws_subnet.private-subnet.id
 }
 
-output "broken_output" {
-  value = aws_instance.does_not_exist.id
-}
+

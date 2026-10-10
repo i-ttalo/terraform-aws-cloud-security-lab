@@ -26,6 +26,7 @@ resource "aws_s3_bucket_versioning" "cloudtrail_logs" {
 resource "aws_kms_key" "cloudtrail" {
   description             = "KMS key for CloudTrail audit logs encryption"
   deletion_window_in_days = 7
+  enable_key_rotation     = true
 
   policy = jsonencode({
     Version = "2012-10-17"
@@ -112,9 +113,11 @@ resource "aws_s3_bucket_policy" "cloudtrail_logs" {
 }
 
 resource "aws_cloudtrail" "main" {
-  name           = "cloud-security-lab-trail"
-  s3_bucket_name = aws_s3_bucket.cloudtrail_logs.id
-  kms_key_id     = aws_kms_key.cloudtrail.arn
+  name                       = "cloud-security-lab-trail"
+  s3_bucket_name             = aws_s3_bucket.cloudtrail_logs.id
+  kms_key_id                 = aws_kms_key.cloudtrail.arn
+  enable_log_file_validation = true
+  is_multi_region_trail      = true
 
   depends_on = [
     aws_s3_bucket_policy.cloudtrail_logs,

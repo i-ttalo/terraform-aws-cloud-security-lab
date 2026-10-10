@@ -18,6 +18,7 @@ resource "aws_s3_bucket_public_access_block" "app_files" {
 resource "aws_kms_key" "s3" {
   description             = "KMS key for cloud security lab S3 bucket"
   deletion_window_in_days = 7
+  enable_key_rotation     = true
 
   tags = {
     Name = "cloud-security-lab-s3-key"

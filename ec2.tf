@@ -21,6 +21,7 @@ data "aws_ami" "amazon_linux" {
 resource "aws_instance" "web" {
   ami                         = data.aws_ami.amazon_linux.id
   instance_type               = "t3.micro"
+  monitoring                  = true
   subnet_id                   = aws_subnet.public_subnet.id
   vpc_security_group_ids      = [aws_security_group.web.id]
   iam_instance_profile        = aws_iam_instance_profile.ec2_profile.name

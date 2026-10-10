@@ -2,6 +2,11 @@
 resource "aws_cloudwatch_log_group" "flow_log_group" {
   name              = "/aws/vpc/flow-logs"
   retention_in_days = 7
+  kms_key_id        = aws_kms_key.flow_logs.arn
+
+  depends_on = [
+    aws_kms_key_policy.flow_logs
+  ]
 
   tags = {
     Environment = "Security-Lab"
@@ -70,4 +75,70 @@ resource "aws_flow_log" "vpc_flow_log" {
   tags = {
     Name = "cloud-security-lab-vpc-flow-logs"
   }
+}
+
+resource "aws_kms_key" "flow_logs" {
+  description             = "KMS key for VPC Flow Logs"
+  enable_key_rotation     = true
+  deletion_window_in_days = 7
+
+  tags = {
+    Name = "vpc-flow-logs-key"
+  }
+}
+
+data "aws_caller_identity" "current" {}
+
+data "aws_region" "current" {}
+
+locals {
+  flow_logs_log_group_arn = "arn:aws:logs:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:log-group:/aws/vpc/flow-logs"
+}
+
+data "aws_iam_policy_document" "flow_logs_kms" {
+  statement {
+    sid    = "EnableAccountKeyManagement"
+    effect = "Allow"
+
+    principals {
+      type        = "AWS"
+      identifiers = ["arn:aws:iam::${data.aws_caller_identity.current.account_id}:root"]
+    }
+
+    actions   = ["kms:*"]
+    resources = ["*"]
+  }
+
+  statement {
+    sid    = "AllowCloudWatchLogs"
+    effect = "Allow"
+
+    principals {
+      type = "Service"
+      identifiers = [
+        "logs.${data.aws_region.current.name}.amazonaws.com"
+      ]
+    }
+
+    actions = [
+      "kms:Encrypt",
+      "kms:Decrypt",
+      "kms:ReEncrypt*",
+      "kms:GenerateDataKey*",
+      "kms:DescribeKey"
+    ]
+
+    resources = ["*"]
+
+    condition {
+      test     = "ArnEquals"
+      variable = "kms:EncryptionContext:aws:logs:arn"
+      values   = [local.flow_logs_log_group_arn]
+    }
+  }
+}
+
+resource "aws_kms_key_policy" "flow_logs" {
+  key_id = aws_kms_key.flow_logs.id
+  policy = data.aws_iam_policy_document.flow_logs_kms.json
 }

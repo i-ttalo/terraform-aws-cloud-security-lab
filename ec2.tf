@@ -30,6 +30,10 @@ resource "aws_instance" "web" {
     http_tokens   = "required"
   }
 
+  root_block_device {
+    encrypted = true
+  }
+
   user_data = <<-EOF
     #!/bin/bash
     dnf install -y nginx

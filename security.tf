@@ -15,6 +15,8 @@ resource "aws_vpc_security_group_ingress_rule" "http" {
   from_port   = 80
   to_port     = 80
   ip_protocol = "tcp"
+
+  description = "Allow inbound HTTP traffic to the web server"
 }
 
 
@@ -23,4 +25,6 @@ resource "aws_vpc_security_group_egress_rule" "all_outbound" {
 
   cidr_ipv4   = "0.0.0.0/0"
   ip_protocol = "-1"
+
+  description = "Allow all outbound traffic"
 }

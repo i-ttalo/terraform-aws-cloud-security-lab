@@ -28,3 +28,14 @@ resource "aws_vpc_security_group_egress_rule" "all_outbound" {
 
   description = "Allow all outbound traffic"
 }
+
+resource "aws_default_security_group" "default" {
+  vpc_id = aws_vpc.main.id
+
+  ingress = []
+  egress  = []
+
+  tags = {
+    Name = "terraform-default-sg-restricted"
+  }
+}

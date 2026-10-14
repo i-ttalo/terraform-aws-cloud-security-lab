@@ -35,3 +35,11 @@ resource "aws_s3_bucket_server_side_encryption_configuration" "app_files" {
     }
   }
 }
+
+resource "aws_s3_bucket_versioning" "app_files" {
+  bucket = aws_s3_bucket.app_files.id
+
+  versioning_configuration {
+    status = "Enabled"
+  }
+}

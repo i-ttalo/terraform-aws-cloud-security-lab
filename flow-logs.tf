@@ -92,7 +92,7 @@ data "aws_caller_identity" "current" {}
 data "aws_region" "current" {}
 
 locals {
-  flow_logs_log_group_arn = "arn:aws:logs:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:log-group:/aws/vpc/flow-logs"
+  flow_logs_log_group_arn = "arn:aws:logs:${data.aws_region.current.region}:${data.aws_caller_identity.current.account_id}:log-group:/aws/vpc/flow-logs"
 }
 
 data "aws_iam_policy_document" "flow_logs_kms" {
@@ -116,7 +116,7 @@ data "aws_iam_policy_document" "flow_logs_kms" {
     principals {
       type = "Service"
       identifiers = [
-        "logs.${data.aws_region.current.name}.amazonaws.com"
+        "logs.${data.aws_region.current.region}.amazonaws.com"
       ]
     }
 

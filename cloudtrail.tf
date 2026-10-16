@@ -117,10 +117,57 @@ resource "aws_cloudtrail" "main" {
   s3_bucket_name             = aws_s3_bucket.cloudtrail_logs.id
   kms_key_id                 = aws_kms_key.cloudtrail.arn
   enable_log_file_validation = true
+  sns_topic_name             = aws_sns_topic.cloudtrail_notifications.name
   is_multi_region_trail      = true
 
   depends_on = [
     aws_s3_bucket_policy.cloudtrail_logs,
-    aws_s3_bucket_server_side_encryption_configuration.cloudtrail_logs
+    aws_s3_bucket_server_side_encryption_configuration.cloudtrail_logs,
+    aws_sns_topic_policy.cloudtrail_notifications
   ]
+}
+
+resource "aws_sns_topic" "cloudtrail_notifications" {
+  name = "cloud-security-lab-cloudtrail-notifications"
+
+  tags = {
+    Name = "cloudtrail-notifications"
+  }
+}
+
+data "aws_iam_policy_document" "cloudtrail_sns" {
+  statement {
+    sid    = "AllowCloudTrailPublish"
+    effect = "Allow"
+
+    principals {
+      type        = "Service"
+      identifiers = ["cloudtrail.amazonaws.com"]
+    }
+
+    actions = ["sns:Publish"]
+
+    resources = [
+      aws_sns_topic.cloudtrail_notifications.arn
+    ]
+
+    condition {
+      test     = "StringEquals"
+      variable = "aws:SourceAccount"
+      values   = [data.aws_caller_identity.current.account_id]
+    }
+
+    condition {
+      test     = "ArnEquals"
+      variable = "aws:SourceArn"
+      values = [
+        "arn:aws:cloudtrail:${data.aws_region.current.region}:${data.aws_caller_identity.current.account_id}:trail/cloud-security-lab-trail"
+      ]
+    }
+  }
+}
+
+resource "aws_sns_topic_policy" "cloudtrail_notifications" {
+  arn    = aws_sns_topic.cloudtrail_notifications.arn
+  policy = data.aws_iam_policy_document.cloudtrail_sns.json
 }

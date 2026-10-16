@@ -116,6 +116,8 @@ resource "aws_cloudtrail" "main" {
   name                       = "cloud-security-lab-trail"
   s3_bucket_name             = aws_s3_bucket.cloudtrail_logs.id
   kms_key_id                 = aws_kms_key.cloudtrail.arn
+  cloud_watch_logs_group_arn = aws_cloudwatch_log_group.cloudtrail.arn
+  cloud_watch_logs_role_arn  = aws_iam_role.cloudtrail_cloudwatch.arn
   enable_log_file_validation = true
   sns_topic_name             = aws_sns_topic.cloudtrail_notifications.name
   is_multi_region_trail      = true
@@ -123,7 +125,8 @@ resource "aws_cloudtrail" "main" {
   depends_on = [
     aws_s3_bucket_policy.cloudtrail_logs,
     aws_s3_bucket_server_side_encryption_configuration.cloudtrail_logs,
-    aws_sns_topic_policy.cloudtrail_notifications
+    aws_sns_topic_policy.cloudtrail_notifications,
+    aws_iam_role_policy.cloudtrail_cloudwatch
   ]
 }
 

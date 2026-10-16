@@ -1,7 +1,7 @@
 # 1. CloudWatch Log Group
 resource "aws_cloudwatch_log_group" "flow_log_group" {
   name              = "/aws/vpc/flow-logs"
-  retention_in_days = 7
+  retention_in_days = 365
   kms_key_id        = aws_kms_key.flow_logs.arn
 
   depends_on = [

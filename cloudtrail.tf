@@ -128,7 +128,8 @@ resource "aws_cloudtrail" "main" {
 }
 
 resource "aws_sns_topic" "cloudtrail_notifications" {
-  name = "cloud-security-lab-cloudtrail-notifications"
+  name              = "cloud-security-lab-cloudtrail-notifications"
+  kms_master_key_id = aws_kms_key.cloudtrail_sns.arn
 
   tags = {
     Name = "cloudtrail-notifications"
@@ -170,4 +171,55 @@ data "aws_iam_policy_document" "cloudtrail_sns" {
 resource "aws_sns_topic_policy" "cloudtrail_notifications" {
   arn    = aws_sns_topic.cloudtrail_notifications.arn
   policy = data.aws_iam_policy_document.cloudtrail_sns.json
+}
+
+resource "aws_kms_key" "cloudtrail_sns" {
+  description             = "KMS key for CloudTrail SNS notifications"
+  enable_key_rotation     = true
+  deletion_window_in_days = 30
+  policy                  = data.aws_iam_policy_document.cloudtrail_sns_kms.json
+
+  tags = {
+    Name = "cloudtrail-sns-kms"
+  }
+}
+
+data "aws_iam_policy_document" "cloudtrail_sns_kms" {
+  statement {
+    sid    = "EnableAccountKeyManagement"
+    effect = "Allow"
+
+    principals {
+      type = "AWS"
+      identifiers = [
+        "arn:aws:iam::${data.aws_caller_identity.current.account_id}:root"
+      ]
+    }
+
+    actions   = ["kms:*"]
+    resources = ["*"]
+  }
+
+  statement {
+    sid    = "AllowCloudTrailEncryption"
+    effect = "Allow"
+
+    principals {
+      type        = "Service"
+      identifiers = ["cloudtrail.amazonaws.com"]
+    }
+
+    actions = [
+      "kms:GenerateDataKey*",
+      "kms:Decrypt"
+    ]
+
+    resources = ["*"]
+
+    condition {
+      test     = "StringEquals"
+      variable = "aws:SourceAccount"
+      values   = [data.aws_caller_identity.current.account_id]
+    }
+  }
 }

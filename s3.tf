@@ -43,3 +43,25 @@ resource "aws_s3_bucket_versioning" "app_files" {
     status = "Enabled"
   }
 }
+
+data "aws_iam_policy_document" "s3_kms" {
+  statement {
+    sid    = "EnableAccountKeyManagement"
+    effect = "Allow"
+
+    principals {
+      type = "AWS"
+      identifiers = [
+        "arn:aws:iam::${data.aws_caller_identity.current.account_id}:root"
+      ]
+    }
+
+    actions   = ["kms:*"]
+    resources = ["*"]
+  }
+}
+
+resource "aws_kms_key_policy" "s3" {
+  key_id = aws_kms_key.s3.id
+  policy = data.aws_iam_policy_document.s3_kms.json
+}

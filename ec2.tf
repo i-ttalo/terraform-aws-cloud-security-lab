@@ -21,10 +21,21 @@ data "aws_ami" "amazon_linux" {
 resource "aws_instance" "web" {
   ami                         = data.aws_ami.amazon_linux.id
   instance_type               = "t3.micro"
-  subnet_id                   = aws_subnet.public_subnet.id
+  monitoring                  = true
+  ebs_optimized               = true
+  subnet_id                   = aws_subnet.private-subnet.id
+  associate_public_ip_address = false
   vpc_security_group_ids      = [aws_security_group.web.id]
   iam_instance_profile        = aws_iam_instance_profile.ec2_profile.name
   user_data_replace_on_change = true
+  metadata_options {
+    http_endpoint = "enabled"
+    http_tokens   = "required"
+  }
+
+  root_block_device {
+    encrypted = true
+  }
 
   user_data = <<-EOF
     #!/bin/bash

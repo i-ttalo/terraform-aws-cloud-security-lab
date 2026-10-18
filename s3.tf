@@ -65,3 +65,20 @@ resource "aws_kms_key_policy" "s3" {
   key_id = aws_kms_key.s3.id
   policy = data.aws_iam_policy_document.s3_kms.json
 }
+
+resource "aws_s3_bucket_lifecycle_configuration" "app_files" {
+  bucket = aws_s3_bucket.app_files.id
+
+  rule {
+    id     = "expire-old-versions"
+    status = "Enabled"
+
+    filter {}
+
+    noncurrent_version_expiration {
+      noncurrent_days = 90
+    }
+  }
+
+  depends_on = [aws_s3_bucket_versioning.app_files]
+}

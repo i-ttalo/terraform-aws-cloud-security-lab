@@ -18,6 +18,7 @@ resource "aws_s3_bucket_public_access_block" "app_files" {
 resource "aws_kms_key" "s3" {
   description             = "KMS key for cloud security lab S3 bucket"
   deletion_window_in_days = 7
+  enable_key_rotation     = true
 
   tags = {
     Name = "cloud-security-lab-s3-key"
@@ -33,4 +34,51 @@ resource "aws_s3_bucket_server_side_encryption_configuration" "app_files" {
       sse_algorithm     = "aws:kms"
     }
   }
+}
+
+resource "aws_s3_bucket_versioning" "app_files" {
+  bucket = aws_s3_bucket.app_files.id
+
+  versioning_configuration {
+    status = "Enabled"
+  }
+}
+
+data "aws_iam_policy_document" "s3_kms" {
+  statement {
+    sid    = "EnableAccountKeyManagement"
+    effect = "Allow"
+
+    principals {
+      type = "AWS"
+      identifiers = [
+        "arn:aws:iam::${data.aws_caller_identity.current.account_id}:root"
+      ]
+    }
+
+    actions   = ["kms:*"]
+    resources = ["*"]
+  }
+}
+
+resource "aws_kms_key_policy" "s3" {
+  key_id = aws_kms_key.s3.id
+  policy = data.aws_iam_policy_document.s3_kms.json
+}
+
+resource "aws_s3_bucket_lifecycle_configuration" "app_files" {
+  bucket = aws_s3_bucket.app_files.id
+
+  rule {
+    id     = "expire-old-versions"
+    status = "Enabled"
+
+    filter {}
+
+    noncurrent_version_expiration {
+      noncurrent_days = 90
+    }
+  }
+
+  depends_on = [aws_s3_bucket_versioning.app_files]
 }

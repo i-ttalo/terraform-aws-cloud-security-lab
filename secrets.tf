@@ -1,6 +1,7 @@
 resource "aws_kms_key" "secrets" {
   description             = "KMS key for Cloud Security Lab secrets"
   deletion_window_in_days = 7
+  enable_key_rotation     = true
 
   tags = {
     Name = "cloud-security-lab-secrets-key"
@@ -42,4 +43,26 @@ resource "aws_iam_role_policy" "ec2_secrets_read" {
       }
     ]
   })
+}
+
+data "aws_iam_policy_document" "secrets_kms" {
+  statement {
+    sid    = "EnableAccountKeyManagement"
+    effect = "Allow"
+
+    principals {
+      type = "AWS"
+      identifiers = [
+        "arn:aws:iam::${data.aws_caller_identity.current.account_id}:root"
+      ]
+    }
+
+    actions   = ["kms:*"]
+    resources = ["*"]
+  }
+}
+
+resource "aws_kms_key_policy" "secrets" {
+  key_id = aws_kms_key.secrets.id
+  policy = data.aws_iam_policy_document.secrets_kms.json
 }
